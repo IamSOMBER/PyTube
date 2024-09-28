@@ -37,7 +37,11 @@ def start_download():
         with yt_dlp.YoutubeDL() as ydl:
             ydl.download(stream_list)
             messagebox.showinfo("Download", "scaricamento completato con successo")
+
+            # Pulisce la lista degli URL per i prossimi download
             stream_list.clear()
+
+            # Cancella il contenuto della textbox per gli URL
             textbox_url.delete("1.0", tk.END)
 
     except DownloadError:
@@ -58,10 +62,12 @@ if __name__ == '__main__':
 
     entry_url = tk.Entry(window, textvariable=link_var, width=50)
 
+    # Crea un pulsante per aggiungere l'URL alla lista
     button_add = tk.Button(window, text="aggiungi", state=DISABLED, command=add_to_list)
 
     url_list_label = tk.Label(window, text="Elenco URLs")
 
+    # Crea una Textbox per la lista degli URL dei video
     textbox_url = tk.Text(window)
 
     # Variabile per il checkbutton audio (1 se selezionato, 0 se deselezionato)
@@ -70,14 +76,16 @@ if __name__ == '__main__':
     # Creazione del checkbutton
     check_button = tk.Checkbutton(window, text="Estrai audio", variable=audio_check)
 
+    # Crea un pulsante per avviare il download
     button_start = tk.Button(window, text="Start", state=DISABLED, command=start_download)
 
     youtube_url_label.pack(pady=5)
     entry_url.pack(pady=5)
     button_add.pack(pady=10)
     url_list_label.pack(pady=10)
-    textbox_url.pack(pady=10)
+    textbox_url.pack(fill=tk.BOTH, expand=True, pady=10)
     check_button.pack(pady=20)
     button_start.pack(pady=10)
 
+    # Avvia l'applicazione Tkinter
     window.mainloop()
