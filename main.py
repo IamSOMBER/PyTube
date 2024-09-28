@@ -1,64 +1,83 @@
 #!/usr/bin/python3
+import tkinter as tk
+from tkinter import messagebox
+from tkinter.constants import DISABLED
 
-import os
-
-import pytube
-from moviepy.editor import VideoFileClip
-
-VIDEO_FORMAT = "acodec"
-DEFAULT_ITAG = 137
-AUDIO_OUTPUT_EXT = ".mp3"
+import yt_dlp
+from yt_dlp.utils import DownloadError
 
 
-def show_available_video_streams(streams):
-    for this_stream in streams:
-        # mostra la lista dei flussi video disponibili
-        if VIDEO_FORMAT in str(this_stream):
-            print(this_stream)
+# Funzione per abilitare il pulsante quando il link è inserito
+def check_link(*args):
+    link = link_var.get()
+
+    if link:
+        button_add.config(state=tk.NORMAL)
+    else:
+        button_add.config(state=tk.DISABLED)
 
 
-def get_stream_name_from_itag(video_url):
-    videos = pytube.YouTube(video_url)
+def add_to_list():
+    url = link_var.get()
+    button_start.config(state=tk.NORMAL)
 
-    show_available_video_streams(videos.streams)
+    # aggiungi l'url nell'elenco del widget
+    textbox_url.insert(tk.END, f"{url}\n")
 
-    # scegli dalla lista in base all' 'itag'
-    itag = input("inserisci l'itag del video: ")
-    video = videos.streams.get_by_itag(int(itag))
+    # rimuovere tutto il testo presente nell'Entry box
+    entry_url.delete(0, tk.END)
 
-    # rinomina video e scarica
-    video_name = video.default_filename  # .replace("mp4", "")
-    print("Downloading...")
-
-    video.download(filename=str(video_name))
-    print(f"Scaricamento {video_name} completato!")
-
-    return video_name
+    stream_list.append(url)
+    print(f"aggiunto: {url}")
 
 
-def extract_audio_from_downloaded_video(video_downloaded):
-    filename, ext = os.path.splitext(video_downloaded)
-    video_clip = VideoFileClip(str(video_downloaded))
-    audio_file = video_clip.audio
-    audio_file.write_audiofile(f"{filename}.{AUDIO_OUTPUT_EXT}")
+def start_download():
+    try:
 
-    # Close the video clip
-    video_clip.close()
+        with yt_dlp.YoutubeDL() as ydl:
+            ydl.download(stream_list)
+            messagebox.showinfo("Download", "scaricamento completato con successo")
+            stream_list.clear()
+            textbox_url.delete("1.0", tk.END)
+
+    except DownloadError:
+        messagebox.showerror("Errore", "scaricamento non riuscito")
 
 
 if __name__ == '__main__':
     stream_list = []
 
-    while True:
-        url = input("YouTube url: ")
-        if url == "":
-            break
-        stream_list.append(url)
+    window = tk.Tk()
+    window.title("YouTube Downloader")
 
-    for stream in stream_list:
-        file_video_name = get_stream_name_from_itag(stream)
-        print(file_video_name)
+    youtube_url_label = tk.Label(window, text="YouTube url")
 
-        extract_audio = input("vuoi estrarre l'audio? (S/n) ")
-        if extract_audio.lower == 's' or extract_audio == "":
-            extract_audio_from_downloaded_video(file_video_name.replace("..", "."))
+    # Variabile per il link
+    link_var = tk.StringVar()
+    link_var.trace_add("write", check_link)
+
+    entry_url = tk.Entry(window, textvariable=link_var, width=50)
+
+    button_add = tk.Button(window, text="aggiungi", state=DISABLED, command=add_to_list)
+
+    url_list_label = tk.Label(window, text="Elenco URLs")
+
+    textbox_url = tk.Text(window)
+
+    # Variabile per il checkbutton audio (1 se selezionato, 0 se deselezionato)
+    audio_check = tk.IntVar()
+
+    # Creazione del checkbutton
+    check_button = tk.Checkbutton(window, text="Estrai audio", variable=audio_check)
+
+    button_start = tk.Button(window, text="Start", state=DISABLED, command=start_download)
+
+    youtube_url_label.pack(pady=5)
+    entry_url.pack(pady=5)
+    button_add.pack(pady=10)
+    url_list_label.pack(pady=10)
+    textbox_url.pack(pady=10)
+    check_button.pack(pady=20)
+    button_start.pack(pady=10)
+
+    window.mainloop()
