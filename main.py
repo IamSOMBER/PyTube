@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 
 import yt_dlp
-from yt_dlp import DownloadError
+from yt_dlp.utils import DownloadError
 
 if __name__ == '__main__':
     stream_list = []
